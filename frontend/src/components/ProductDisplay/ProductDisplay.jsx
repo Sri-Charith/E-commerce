@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import "./ProductDisplay.css";
 import star_icon from "../assets/star_icon.png";
 import star_dull_icon from "../assets/star_dull_icon.png";
@@ -6,7 +6,11 @@ import { ShopContext } from "../../context/ShopContextProvider";
 
 const ProductDisplay = (props) => {
   const { product } = props;
-  const {addToCart} = useContext(ShopContext)
+  const { addToCart } = useContext(ShopContext);
+  const [selectedSize, setSelectedSize] = useState("");
+
+  const sizes = ["S", "M", "L", "XL", "XXL"];
+
   return (
     <div className="productDisplay">
       {console.log(props.product)}
@@ -48,14 +52,34 @@ const ProductDisplay = (props) => {
         <div className="productdisplay-right-size">
           <h1>Select Size</h1>
           <div className="productdisplay-right-sizes">
-            <div>S</div>
-            <div>M</div>
-            <div>L</div>
-            <div>XL</div>
-            <div>XXL</div>
+            {sizes.map((size) => (
+              <div
+                key={size}
+                className={selectedSize === size ? "selected-size" : ""}
+                onClick={() => setSelectedSize(size)}
+                style={{
+                  border: selectedSize === size ? "2px solid #333" : "1px solid #ccc",
+                  padding: "6px 12px",
+                  cursor: "pointer",
+                  marginRight: "8px",
+                  borderRadius: "4px",
+                  fontWeight: selectedSize === size ? "bold" : "normal",
+                }}
+              >
+                {size}
+              </div>
+            ))}
           </div>
         </div>
-        <button onClick={()=>{addToCart(product.id)}}>ADD TO CART</button>
+        <button
+          onClick={() => {
+            if (selectedSize) addToCart(product.id, selectedSize);
+          }}
+          disabled={!selectedSize}
+          style={{ opacity: !selectedSize ? 0.5 : 1, cursor: !selectedSize ? "not-allowed" : "pointer" }}
+        >
+          ADD TO CART
+        </button>
         <p className="productdisplay-right-category"><span>Category : </span>Woman, T-Shirt, Crop Top</p>
         <p className="productdisplay-right-category"><span>Tags : </span>Modern, latest</p>
       </div>
