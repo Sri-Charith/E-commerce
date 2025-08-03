@@ -10,13 +10,34 @@ const AddProduct = () => {
       image:"",
       category:"women",
       new_price:"",
-      old_price:""
+      old_price:"",
+      description:""
   });
 
+  const [sizes, setSizes] = useState([
+    { size: "S", quantity: 0 },
+    { size: "M", quantity: 0 },
+    { size: "L", quantity: 0 },
+    { size: "XL", quantity: 0 },
+    { size: "XXL", quantity: 0 }
+  ]);
+
   const AddProduct = async () => {
+    // Validation
+    if (!productDetails.name || !productDetails.new_price || !productDetails.old_price || !image) {
+      alert("Please fill all required fields (name, prices, and image)");
+      return;
+    }
+
+    // Check if at least one size has quantity > 0
+    const hasStock = sizes.some(size => size.quantity > 0);
+    if (!hasStock) {
+      alert("Please add quantity for at least one size");
+      return;
+    }
     
     let dataObj;
-    let product = productDetails;
+    let product = { ...productDetails, sizes };
 
     let formData = new FormData();
     formData.append('product', image);
@@ -43,7 +64,30 @@ const AddProduct = () => {
       body: JSON.stringify(product),
     })
       .then((resp) => resp.json())
-      .then((data) => {data.success?alert("Product Added"):alert("Failed")});
+      .then((data) => {
+        if (data.success) {
+          alert("Product Added Successfully!");
+          // Reset form
+          setProductDetails({
+            name: "",
+            image: "",
+            category: "women",
+            new_price: "",
+            old_price: "",
+            description: ""
+          });
+          setSizes([
+            { size: "S", quantity: 0 },
+            { size: "M", quantity: 0 },
+            { size: "L", quantity: 0 },
+            { size: "XL", quantity: 0 },
+            { size: "XXL", quantity: 0 }
+          ]);
+          setImage(false);
+        } else {
+          alert("Failed to add product: " + (data.error || "Unknown error"));
+        }
+      });
       
     }
   }
@@ -51,11 +95,17 @@ const AddProduct = () => {
   const changeHandler = (e) => {
     console.log(e);
     setProductDetails({...productDetails,[e.target.name]:e.target.value});
-    }
+  }
 
   const imageHandler = (e) => {
     setImage(e.target.files[0]);
-    }
+  }
+
+  const handleSizeQuantityChange = (index, field, value) => {
+    const newSizes = [...sizes];
+    newSizes[index][field] = field === 'quantity' ? parseInt(value) || 0 : value;
+    setSizes(newSizes);
+  }
 
   return (
     <div className="addproduct">
@@ -82,7 +132,39 @@ const AddProduct = () => {
         </select> 
       </div>
       <div className="addproduct-itemfield">
-        <p>Product title</p>
+        <p>Product description</p>
+        <textarea 
+          name="description" 
+          value={productDetails.description} 
+          onChange={(e)=>{changeHandler(e)}} 
+          placeholder="Enter product description here..."
+          rows="4"
+          style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
+        />
+      </div>
+      
+      {/* Size and Quantity Section */}
+      <div className="addproduct-itemfield">
+        <p>Size and Quantity</p>
+        <div className="sizes-container">
+          {sizes.map((sizeData, index) => (
+            <div key={index} className="size-quantity-row">
+              <span className="size-label">{sizeData.size}:</span>
+              <input 
+                type="number" 
+                value={sizeData.quantity} 
+                onChange={(e) => handleSizeQuantityChange(index, 'quantity', e.target.value)}
+                placeholder="Quantity"
+                min="0"
+                style={{ width: '80px', padding: '5px', marginLeft: '10px' }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div className="addproduct-itemfield">
+        <p>Product image</p>
         <label for="file-input">
           <img className="addproduct-thumbnail-img" src={!image?upload_area:URL.createObjectURL(image)} alt="" />
         </label>

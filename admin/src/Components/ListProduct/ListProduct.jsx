@@ -40,19 +40,31 @@ const ListProduct = () => {
           <p>Old Price</p>
           <p>New Price</p>
           <p>Category</p>
+          <p>Sizes</p>
           <p>Remove</p>
         </div>
       <div className="listproduct-allproducts">
         <hr />
-        {allproducts.map((e) => {
+        {allproducts.map((e, index) => {
           return (
-            <div>
+            <div key={index}>
               <div className="listproduct-format-main listproduct-format">
                 <img className="listproduct-product-icon" src={e.image} alt="" />
-                <p cartitems-product-title>{e.name}</p>
+                <p className="listproduct-product-title">{e.name}</p>
                 <p>${e.old_price}</p>
                 <p>${e.new_price}</p>
                 <p>{e.category}</p>
+                <div className="listproduct-sizes">
+                  {e.sizes && e.sizes.length > 0 ? (
+                    e.sizes.map((size, idx) => (
+                      <span key={idx} className="size-tag">
+                        {size.size}: {size.quantity}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="no-sizes">No sizes</span>
+                  )}
+                </div>
                 <img className="listproduct-remove-icon" onClick={()=>{removeProduct(e.id)}} src={cross_icon} alt="" />
               </div>
               <hr />

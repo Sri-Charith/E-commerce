@@ -68,6 +68,20 @@ const Users = mongoose.model("Users", {
   cartData: {
     type: Object,
   },
+  cartItems: [{
+    productId: {
+      type: Number,
+      required: true
+    },
+    size: {
+      type: String,
+      required: true
+    },
+    quantity: {
+      type: Number,
+      default: 1
+    }
+  }],
   date: {
     type: Date,
     default: Date.now,
@@ -98,6 +112,22 @@ const Product = mongoose.model("Product", {
   old_price: {
     type: Number
   },
+  description: {
+    type: String,
+    default: "Product description not available"
+  },
+  sizes: [
+    {
+      size: {
+        type: String,
+        required: true
+      },
+      quantity: {
+        type: Number,
+        default: 0
+      }
+    }
+  ],
   date: {
     type: Date,
     default: Date.now,
@@ -191,74 +221,234 @@ app.get("/popularinwomen", async (req, res) => {
 
 //Create an endpoint for saving the product in cart
 app.post('/addtocart', fetchuser, async (req, res) => {
-	console.log("Add Cart");
-    let userData = await Users.findOne({_id:req.user.id});
-    userData.cartData[req.body.itemId] += 1;
-    await Users.findOneAndUpdate({_id:req.user.id}, {cartData:userData.cartData});
-    res.send("Added")
-  })
+  try {
+    console.log("Add Cart");
+    const { itemId, size, quantity = 1 } = req.body;
+    
+    if (!itemId || !size) {
+      return res.status(400).json({ success: false, error: "Item ID and size are required" });
+    }
 
-  //Create an endpoint for saving the product in cart
+    let userData = await Users.findOne({ _id: req.user.id });
+    
+    // Check if item already exists in cart with same size
+    const existingItemIndex = userData.cartItems.findIndex(
+      item => item.productId === itemId && item.size === size
+    );
+
+    if (existingItemIndex !== -1) {
+      // Update existing item quantity
+      userData.cartItems[existingItemIndex].quantity += quantity;
+    } else {
+      // Add new item
+      userData.cartItems.push({
+        productId: itemId,
+        size: size,
+        quantity: quantity
+      });
+    }
+    
+    await Users.findOneAndUpdate(
+      { _id: req.user.id }, 
+      { cartItems: userData.cartItems }
+    );
+    
+    res.json({ success: true, message: "Added to cart" });
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    res.status(500).json({ success: false, error: "Failed to add to cart" });
+  }
+});
+
+//Create an endpoint for removing the product from cart
 app.post('/removefromcart', fetchuser, async (req, res) => {
-	console.log("Remove Cart");
-    let userData = await Users.findOne({_id:req.user.id});
-    if(userData.cartData[req.body.itemId]!=0)
-    {
-      userData.cartData[req.body.itemId] -= 1;
+  try {
+    console.log("Remove Cart");
+    const { itemId, size, quantity = 1 } = req.body;
+    
+    if (!itemId || !size) {
+      return res.status(400).json({ success: false, error: "Item ID and size are required" });
     }
-    await Users.findOneAndUpdate({_id:req.user.id}, {cartData:userData.cartData});
-    res.send("Removed");
-  })
 
-  //Create an endpoint for saving the product in cart
-  app.post('/getcart', fetchuser, async (req, res) => {
-    try {
-      console.log("Get Cart");
-  
-      const userData = await Users.findOne({ _id: req.user.id });
-  
-      if (!userData) {
-        return res.status(404).json({ message: "User not found" });
+    let userData = await Users.findOne({ _id: req.user.id });
+    
+    // Find the item in cart
+    const existingItemIndex = userData.cartItems.findIndex(
+      item => item.productId === itemId && item.size === size
+    );
+
+    if (existingItemIndex !== -1) {
+      // Reduce quantity
+      userData.cartItems[existingItemIndex].quantity = Math.max(0, userData.cartItems[existingItemIndex].quantity - quantity);
+      
+      // Remove item if quantity becomes 0
+      if (userData.cartItems[existingItemIndex].quantity === 0) {
+        userData.cartItems.splice(existingItemIndex, 1);
       }
-  
-      res.json(userData.cartData);
-  
-    } catch (error) {
-      console.error("Error in /getcart:", error);
-      res.status(500).json({ message: "Internal Server Error" });
     }
-  });
+    
+    await Users.findOneAndUpdate(
+      { _id: req.user.id }, 
+      { cartItems: userData.cartItems }
+    );
+    
+    res.json({ success: true, message: "Removed from cart" });
+  } catch (error) {
+    console.error("Error removing from cart:", error);
+    res.status(500).json({ success: false, error: "Failed to remove from cart" });
+  }
+});
+
+//Create an endpoint for getting cart data
+app.post('/getcart', fetchuser, async (req, res) => {
+  try {
+    console.log("Get Cart");
+
+    const userData = await Users.findOne({ _id: req.user.id });
+
+    if (!userData) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ success: true, cartItems: userData.cartItems });
+
+  } catch (error) {
+    console.error("Error in /getcart:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
   
 
 
 app.post("/addproduct", async (req, res) => {
-  let products = await Product.find({});
-  let id;
-  if (products.length>0) {
-    let last_product_array = products.slice(-1);
-    let last_product = last_product_array[0];
-    id = last_product.id+1;
+  try {
+    let products = await Product.find({});
+    let id;
+    if (products.length > 0) {
+      let last_product_array = products.slice(-1);
+      let last_product = last_product_array[0];
+      id = last_product.id + 1;
+    } else {
+      id = 1;
+    }
+
+    // Validate sizes array
+    const sizes = req.body.sizes || [];
+    if (!Array.isArray(sizes)) {
+      return res.status(400).json({ success: false, error: "Sizes must be an array" });
+    }
+
+    // Validate each size object
+    for (let sizeObj of sizes) {
+      if (!sizeObj.size || typeof sizeObj.quantity !== 'number' || sizeObj.quantity < 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Each size must have 'size' (string) and 'quantity' (number >= 0)" 
+        });
+      }
+    }
+
+    const product = new Product({
+      id: id,
+      name: req.body.name,
+      image: req.body.image,
+      category: req.body.category,
+      new_price: req.body.new_price,
+      old_price: req.body.old_price,
+      description: req.body.description || "Product description not available",
+      sizes: sizes
+    });
+
+    console.log(product);
+    await product.save();
+    console.log("Saved");
+    res.json({ success: true, name: req.body.name, id: id });
+  } catch (error) {
+    console.error("Error adding product:", error);
+    res.status(500).json({ success: false, error: "Failed to add product" });
   }
-  else
-  { id = 1; }
-  const product = new Product({
-    id: id,
-    name: req.body.name,
-    image: req.body.image,
-    category: req.body.category,
-    new_price: req.body.new_price,
-    old_price: req.body.old_price,
-  });
-  console.log(product);
-  await product.save();
-  console.log("Saved");
-  res.json({success:true,name:req.body.name})
 });
 
 app.post("/removeproduct", async (req, res) => {
-  const product = await Product.findOneAndDelete({ id: req.body.id });
-  console.log("Removed");
-  res.json({success:true,name:req.body.name})
+  try {
+    const product = await Product.findOneAndDelete({ id: req.body.id });
+    if (!product) {
+      return res.status(404).json({ success: false, error: "Product not found" });
+    }
+    console.log("Removed");
+    res.json({ success: true, name: req.body.name });
+  } catch (error) {
+    console.error("Error removing product:", error);
+    res.status(500).json({ success: false, error: "Failed to remove product" });
+  }
+});
+
+// Add new endpoint to update product
+app.put("/updateproduct", async (req, res) => {
+  try {
+    const { id, name, image, category, new_price, old_price, description, sizes } = req.body;
+    
+    // Validate sizes array if provided
+    if (sizes && !Array.isArray(sizes)) {
+      return res.status(400).json({ success: false, error: "Sizes must be an array" });
+    }
+
+    if (sizes) {
+      for (let sizeObj of sizes) {
+        if (!sizeObj.size || typeof sizeObj.quantity !== 'number' || sizeObj.quantity < 0) {
+          return res.status(400).json({ 
+            success: false, 
+            error: "Each size must have 'size' (string) and 'quantity' (number >= 0)" 
+          });
+        }
+      }
+    }
+
+    const updateData = {
+      name,
+      image,
+      category,
+      new_price,
+      old_price,
+      description,
+      sizes
+    };
+
+    // Remove undefined fields
+    Object.keys(updateData).forEach(key => 
+      updateData[key] === undefined && delete updateData[key]
+    );
+
+    const product = await Product.findOneAndUpdate(
+      { id: id },
+      updateData,
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({ success: false, error: "Product not found" });
+    }
+
+    console.log("Updated");
+    res.json({ success: true, product });
+  } catch (error) {
+    console.error("Error updating product:", error);
+    res.status(500).json({ success: false, error: "Failed to update product" });
+  }
+});
+
+// Add endpoint to get product by ID
+app.get("/product/:id", async (req, res) => {
+  try {
+    const product = await Product.findOne({ id: parseInt(req.params.id) });
+    if (!product) {
+      return res.status(404).json({ success: false, error: "Product not found" });
+    }
+    res.json({ success: true, product });
+  } catch (error) {
+    console.error("Error getting product:", error);
+    res.status(500).json({ success: false, error: "Failed to get product" });
+  }
 });
 
 app.listen(port, (error) => {

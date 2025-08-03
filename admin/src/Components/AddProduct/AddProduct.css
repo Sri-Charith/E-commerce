@@ -71,6 +71,45 @@
   font-weight: 500;
 }
 
+/* Size and Quantity Styles */
+.sizes-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.size-quantity-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 5px;
+  min-width: 120px;
+}
+
+.size-label {
+  font-weight: 600;
+  color: #495057;
+  margin-right: 10px;
+}
+
+.size-quantity-row input {
+  width: 80px !important;
+  height: 35px !important;
+  padding: 5px 10px !important;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.size-quantity-row input:focus {
+  outline: none;
+  border-color: #6079ff;
+  box-shadow: 0 0 0 2px rgba(96, 121, 255, 0.2);
+}
+
 @media(max-width:800px) {
   .addproduct {
     width: auto;

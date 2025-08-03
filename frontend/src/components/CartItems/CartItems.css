@@ -8,7 +8,7 @@
 }
 .cartitems-format-main {
   display: grid;
-  grid-template-columns: 0.5fr 2fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 0.5fr 2fr 0.5fr 1fr 1fr 1fr 1fr;
   align-items: center;
   gap: 75px;
   padding: 20px 0px;
@@ -18,13 +18,19 @@
 }
 .cartitems-format {
   display: grid;
-  grid-template-columns: 0.5fr 2fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 0.5fr 2fr 0.5fr 1fr 1fr 1fr 1fr;
   align-items: center;
   gap: 75px;
   padding: 20px 0px;
   color: #454545;
   font-size: 17px;
   font-weight: 500;
+}
+
+.cartitems-size {
+  font-weight: 600;
+  color: #666;
+  text-align: center;
 }
 
 .cartitems-product-icon {

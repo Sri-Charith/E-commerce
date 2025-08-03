@@ -11,13 +11,35 @@
 }
 .listproduct-format-main{
   display: grid;
-  grid-template-columns: 1fr 3fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 3fr 1fr 1fr 1fr 2fr 1fr;
   gap: 10px;
   width: 100%;
   padding: 20px 0px;
   color: #454545;
   font-size: 15px;
   font-weight: 600;
+}
+
+.listproduct-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+.size-tag {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.no-sizes {
+  color: #999;
+  font-style: italic;
+  font-size: 12px;
 }
 
 .listproduct-format{

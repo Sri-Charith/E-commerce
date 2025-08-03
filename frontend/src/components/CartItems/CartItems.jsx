@@ -12,29 +12,36 @@ const CartItems = () => {
       <div className="cartitems-format-main">
         <p>Products</p>
         <p>Title</p>
+        <p>Size</p>
         <p>Price</p>
         <p>Quantity</p>
         <p>Total</p>
         <p>Remove</p>
       </div>
       <hr />
-      {products.map((e)=>{
+      {cartItems.map((item, index) => {
+        const product = products.find(p => p.id === item.productId);
+        if (!product) return null;
 
-        if(cartItems[e.id]>0)
-        {
-          return  <div>
-                    <div className="cartitems-format">
-                      <img className="cartitems-product-icon" src={e.image} alt="" />
-                      <p cartitems-product-title>{e.name}</p>
-                      <p>${e.new_price}</p>
-                      <button className="cartitems-quatity">{cartItems[e.id]}</button>
-                      <p>${e.new_price*cartItems[e.id]}</p>
-                      <img onClick={()=>{removeFromCart(e.id)}} className="cartitems-remove-icon" src={cross_icon} alt="" />
-                    </div>
-                     <hr />
-                  </div>;
-        }
-        return null;
+        return (
+          <div key={index}>
+            <div className="cartitems-format">
+              <img className="cartitems-product-icon" src={product.image} alt="" />
+              <p className="cartitems-product-title">{product.name}</p>
+              <p className="cartitems-size">{item.size}</p>
+              <p>${product.new_price}</p>
+              <button className="cartitems-quatity">{item.quantity}</button>
+              <p>${product.new_price * item.quantity}</p>
+              <img 
+                onClick={() => {removeFromCart(item.productId, item.size, 1)}} 
+                className="cartitems-remove-icon" 
+                src={cross_icon} 
+                alt="" 
+              />
+            </div>
+            <hr />
+          </div>
+        );
       })}
       
       <div className="cartitems-down">
