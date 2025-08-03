@@ -5,6 +5,7 @@ import upload_area from "../Assets/upload_area.svg";
 const AddProduct = () => {
 
   const[image,setImage] = useState(false);
+  const [additionalImages, setAdditionalImages] = useState([]);
   const [productDetails,setProductDetails] = useState({
       name:"",
       image:"",
@@ -37,8 +38,10 @@ const AddProduct = () => {
     }
     
     let dataObj;
+    let additionalImageUrls = [];
     let product = { ...productDetails, sizes };
 
+    // Upload main image
     let formData = new FormData();
     formData.append('product', image);
     
@@ -54,6 +57,30 @@ const AddProduct = () => {
 
     if (dataObj.success) {
       product.image = dataObj.image_url;
+      
+      // Upload additional images if any
+      if (additionalImages.length > 0) {
+        let additionalFormData = new FormData();
+        additionalImages.forEach((img, index) => {
+          additionalFormData.append('products', img);
+        });
+        
+        await fetch('http://localhost:4000/upload-multiple', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+          },
+          body: additionalFormData,
+        })
+          .then((resp) => resp.json())
+          .then((data) => {
+            if (data.success) {
+              additionalImageUrls = data.image_urls;
+            }
+          });
+      }
+      
+      product.images = additionalImageUrls;
       console.log(product);
       await fetch('http://localhost:4000/addproduct', {
       method: 'POST',
@@ -84,6 +111,7 @@ const AddProduct = () => {
             { size: "XXL", quantity: 0 }
           ]);
           setImage(false);
+          setAdditionalImages([]);
         } else {
           alert("Failed to add product: " + (data.error || "Unknown error"));
         }
@@ -100,6 +128,16 @@ const AddProduct = () => {
   const imageHandler = (e) => {
     setImage(e.target.files[0]);
   }
+
+  const additionalImagesHandler = (e) => {
+    const files = Array.from(e.target.files);
+    setAdditionalImages(files);
+  };
+
+  const removeAdditionalImage = (index) => {
+    const updatedImages = additionalImages.filter((_, i) => i !== index);
+    setAdditionalImages(updatedImages);
+  };
 
   const handleSizeQuantityChange = (index, field, value) => {
     const newSizes = [...sizes];
@@ -164,12 +202,63 @@ const AddProduct = () => {
       </div>
       
       <div className="addproduct-itemfield">
-        <p>Product image</p>
-        <label for="file-input">
+        <p>Main Product Image</p>
+        <label htmlFor="file-input">
           <img className="addproduct-thumbnail-img" src={!image?upload_area:URL.createObjectURL(image)} alt="" />
         </label>
-        <input onChange={(e)=>{imageHandler(e)}} type="file" name="image" id="file-input" hidden />
+        <input onChange={(e)=>{imageHandler(e)}} type="file" name="image" id="file-input" accept="image/*" hidden />
       </div>
+      
+      {/* Additional Images Section */}
+      <div className="addproduct-itemfield">
+        <p>Additional Product Images (Optional)</p>
+        
+        {/* Preview Additional Images */}
+        {additionalImages.length > 0 && (
+          <div className="additional-images-preview">
+            <p className="preview-label">Selected Additional Images:</p>
+            <div className="images-grid">
+              {additionalImages.map((img, index) => (
+                <div key={index} className="image-container">
+                  <img 
+                    src={URL.createObjectURL(img)} 
+                    alt={`Additional ${index + 1}`}
+                    className="additional-image"
+                  />
+                  <button 
+                    type="button"
+                    className="remove-image-btn"
+                    onClick={() => removeAdditionalImage(index)}
+                    title="Remove image"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Upload Additional Images */}
+        <div className="upload-additional-section">
+          <label htmlFor="additional-files-input" className="upload-additional-label">
+            <div className="upload-additional-area">
+              <span>📷 Add More Images</span>
+              <small>Select multiple images (max 5)</small>
+            </div>
+          </label>
+          <input 
+            onChange={additionalImagesHandler} 
+            type="file" 
+            name="additionalImages" 
+            id="additional-files-input" 
+            accept="image/*"
+            multiple
+            hidden 
+          />
+        </div>
+      </div>
+      
       <button className="addproduct-btn" onClick={()=>{AddProduct()}}>ADD</button>
     </div>
   );

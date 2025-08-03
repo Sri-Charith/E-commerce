@@ -35,6 +35,28 @@ app.post("/upload", upload.single('product'), (req, res) => {
         image_url: `http://localhost:4000/images/${req.file.filename}`
     })
 })
+
+// Multiple image upload endpoint
+app.post("/upload-multiple", upload.array('products', 5), (req, res) => {
+    try {
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ success: false, error: "No files uploaded" });
+        }
+        
+        const imageUrls = req.files.map(file => 
+            `http://localhost:4000/images/${file.filename}`
+        );
+        
+        res.json({
+            success: true,
+            image_urls: imageUrls
+        });
+    } catch (error) {
+        console.error("Error uploading multiple images:", error);
+        res.status(500).json({ success: false, error: "Failed to upload images" });
+    }
+})
+
 app.use('/images', express.static('upload/images'));
 
 // MiddleWare to fetch user from database
@@ -101,6 +123,10 @@ const Product = mongoose.model("Product", {
   image: {
     type: String,
     required: true,
+  },
+  images: {
+    type: [String],
+    default: []
   },
   category: {
     type: String,
@@ -352,6 +378,7 @@ app.post("/addproduct", async (req, res) => {
       id: id,
       name: req.body.name,
       image: req.body.image,
+      images: req.body.images || [],
       category: req.body.category,
       new_price: req.body.new_price,
       old_price: req.body.old_price,
@@ -386,7 +413,7 @@ app.post("/removeproduct", async (req, res) => {
 // Add new endpoint to update product
 app.put("/updateproduct", async (req, res) => {
   try {
-    const { id, name, image, category, new_price, old_price, description, sizes } = req.body;
+    const { id, name, image, images, category, new_price, old_price, description, sizes } = req.body;
     
     // Validate sizes array if provided
     if (sizes && !Array.isArray(sizes)) {
@@ -407,6 +434,7 @@ app.put("/updateproduct", async (req, res) => {
     const updateData = {
       name,
       image,
+      images,
       category,
       new_price,
       old_price,

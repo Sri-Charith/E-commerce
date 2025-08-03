@@ -110,6 +110,112 @@
   box-shadow: 0 0 0 2px rgba(96, 121, 255, 0.2);
 }
 
+/* Multiple Images Styling for AddProduct */
+.additional-images-preview {
+  margin: 20px 0;
+}
+
+.preview-label {
+  font-weight: 600;
+  color: #495057;
+  margin: 15px 0 10px 0;
+  font-size: 14px;
+}
+
+.images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+  margin: 10px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.additional-image {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #dee2e6;
+  transition: transform 0.2s ease;
+}
+
+.additional-image:hover {
+  transform: scale(1.05);
+  border-color: #007bff;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #dc3545;
+  color: white;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.remove-image-btn:hover {
+  background: #c82333;
+  transform: scale(1.1);
+}
+
+.upload-additional-section {
+  margin: 20px 0;
+}
+
+.upload-additional-label {
+  cursor: pointer;
+  display: block;
+}
+
+.upload-additional-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  border: 2px dashed #c3c3c3;
+  border-radius: 8px;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.upload-additional-area:hover {
+  border-color: #007bff;
+  background: #e3f2fd;
+}
+
+.upload-additional-area span {
+  font-size: 16px;
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 5px;
+}
+
+.upload-additional-area small {
+  color: #6c757d;
+  font-size: 12px;
+}
+
 @media(max-width:800px) {
   .addproduct {
     width: auto;
