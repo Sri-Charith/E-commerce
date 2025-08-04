@@ -5,15 +5,6 @@ export const ShopContext = createContext(null);
 const ShopContextProvider = (props) => {
 
   const [products,setProducts] = useState([]);
-  
-  const getDefaultCart = () => {
-    let cart = {};
-    for (let i = 0; i < 300; i++) {
-      cart[i] = 0;
-    }
-    return cart;
-  };
-
   const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {

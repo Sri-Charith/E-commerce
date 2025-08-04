@@ -75,17 +75,24 @@ const fetchuser = async (req, res, next) => {
 };
 
 
-// Schema for creating user model
+// Schema for creating user model (customers)
 const Users = mongoose.model("Users", {
   name: {
     type: String,
+    required: true,
   },
   email: {
     type: String,
     unique: true,
+    required: true,
   },
   password: {
     type: String,
+    required: true,
+  },
+  role: {
+    type: String,
+    default: 'user'
   },
   cartData: {
     type: Object,
@@ -104,6 +111,31 @@ const Users = mongoose.model("Users", {
       default: 1
     }
   }],
+  date: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+// Schema for creating admin model
+const Admins = mongoose.model("Admins", {
+  name: {
+    type: String,
+    required: true,
+  },
+  email: {
+    type: String,
+    unique: true,
+    required: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+  role: {
+    type: String,
+    default: 'admin'
+  },
   date: {
     type: Date,
     default: Date.now,
@@ -171,59 +203,160 @@ app.get("/", (req, res) => {
 //Create an endpoint at ip/login for login the user and giving auth-token
 app.post('/login', async (req, res) => {
   console.log("Login");
-    let success = false;
+  let success = false;
+  
+  try {
+    // First check in Users collection
     let user = await Users.findOne({ email: req.body.email });
+    
+    // If not found in Users, check in Admins collection
+    if (!user) {
+      user = await Admins.findOne({ email: req.body.email });
+    }
+    
     if (user) {
-        const passCompare = req.body.password === user.password;
-        if (passCompare) {
-            const data = {
-                user: {
-                    id: user.id
-                }
-            }
-			success = true;
-      console.log(user.id);
-			const token = jwt.sign(data, 'secret_ecom');
-			res.json({ success, token });
+      const passCompare = req.body.password === user.password;
+      if (passCompare) {
+        const data = {
+          user: {
+            id: user.id,
+            email: user.email,
+            role: user.role
+          }
         }
-        else {
-            return res.status(400).json({success: success, errors: "please try with correct email/password"})
-        }
+        success = true;
+        console.log(`${user.role} login:`, user.id);
+        const token = jwt.sign(data, 'secret_ecom');
+        res.json({ 
+          success, 
+          token, 
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role
+          }
+        });
+      } else {
+        return res.status(400).json({success: success, errors: "Incorrect password"});
+      }
+    } else {
+      return res.status(400).json({success: success, errors: "No account found with this email"});
     }
-    else {
-        return res.status(400).json({success: success, errors: "please try with correct email/password"})
-    }
+  } catch (error) {
+    console.error('Login error:', error);
+    return res.status(500).json({success: false, errors: "Server error during login"});
+  }
 })
 
-//Create an endpoint at ip/auth for regestring the user in data base & sending token
+//Create an endpoint at ip/auth for registering users and admins in separate collections
 app.post('/signup', async (req, res) => {
   console.log("Sign Up");
-        let success = false;
-        let check = await Users.findOne({ email: req.body.email });
-        if (check) {
-            return res.status(400).json({ success: success, errors: "existing user found with this email" });
-        }
-        let cart = {};
-          for (let i = 0; i < 300; i++) {
-          cart[i] = 0;
-        }
-        const user = new Users({
-            name: req.body.username,
-            email: req.body.email,
-            password: req.body.password,
-            cartData: cart,
+  let success = false;
+  
+  try {
+    const { username, email, password, role } = req.body;
+    const userRole = role || 'user';
+    
+    if (userRole === 'admin') {
+      // Check if admin already exists
+      let existingAdmin = await Admins.findOne({ email: email });
+      if (existingAdmin) {
+        return res.status(400).json({ 
+          success: false, 
+          errors: "An admin account with this email already exists" 
         });
-        await user.save();
-        const data = {
-            user: {
-                id: user.id
-            }
+      }
+      
+      // Create new admin
+      const admin = new Admins({
+        name: username,
+        email: email,
+        password: password,
+        role: 'admin'
+      });
+      
+      await admin.save();
+      
+      const data = {
+        user: {
+          id: admin.id,
+          email: admin.email,
+          role: admin.role
         }
-        
-        const token = jwt.sign(data, 'secret_ecom');
-        success = true; 
-        res.json({ success, token })
-    })
+      }
+      
+      const token = jwt.sign(data, 'secret_ecom');
+      success = true;
+      
+      res.json({ 
+        success, 
+        token,
+        user: {
+          id: admin.id,
+          email: admin.email,
+          name: admin.name,
+          role: admin.role
+        }
+      });
+      
+    } else {
+      // Check if user already exists
+      let existingUser = await Users.findOne({ email: email });
+      if (existingUser) {
+        return res.status(400).json({ 
+          success: false, 
+          errors: "A user account with this email already exists" 
+        });
+      }
+      
+      // Create cart data for user
+      let cart = {};
+      for (let i = 0; i < 300; i++) {
+        cart[i] = 0;
+      }
+      
+      // Create new user
+      const user = new Users({
+        name: username,
+        email: email,
+        password: password,
+        role: 'user',
+        cartData: cart,
+      });
+      
+      await user.save();
+      
+      const data = {
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role
+        }
+      }
+      
+      const token = jwt.sign(data, 'secret_ecom');
+      success = true;
+      
+      res.json({ 
+        success, 
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Signup error:', error);
+    return res.status(500).json({
+      success: false, 
+      errors: "Server error during signup"
+    });
+  }
+});
 
 app.get("/allproducts", async (req, res) => {
 	let products = await Product.find({});
@@ -476,6 +609,144 @@ app.get("/product/:id", async (req, res) => {
   } catch (error) {
     console.error("Error getting product:", error);
     res.status(500).json({ success: false, error: "Failed to get product" });
+  }
+});
+
+// ===== ADMIN MANAGEMENT ENDPOINTS =====
+
+// Middleware to check if user is admin
+const requireAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ success: false, error: 'Admin privileges required' });
+  }
+  next();
+};
+
+// Get all admins (admin only)
+app.get('/admins', fetchuser, requireAdmin, async (req, res) => {
+  try {
+    const admins = await Admins.find({}, { password: 0 }); // Exclude passwords
+    res.json({ success: true, admins });
+  } catch (error) {
+    console.error('Error fetching admins:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch admins' });
+  }
+});
+
+// Create new admin (admin only)
+app.post('/create-admin', fetchuser, requireAdmin, async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, error: 'Name, email, and password are required' });
+    }
+    
+    // Check if admin already exists
+    const existingAdmin = await Admins.findOne({ email });
+    if (existingAdmin) {
+      return res.status(400).json({ success: false, error: 'Admin with this email already exists' });
+    }
+    
+    // Create new admin
+    const newAdmin = new Admins({
+      name,
+      email,
+      password, // In production, hash this password
+      role: 'admin'
+    });
+    
+    await newAdmin.save();
+    
+    // Return admin data without password
+    const { password: _, ...adminData } = newAdmin.toObject();
+    res.json({ success: true, admin: adminData, message: 'Admin created successfully' });
+  } catch (error) {
+    console.error('Error creating admin:', error);
+    res.status(500).json({ success: false, error: 'Failed to create admin' });
+  }
+});
+
+// Update admin (admin only)
+app.put('/update-admin/:id', fetchuser, requireAdmin, async (req, res) => {
+  try {
+    const { name, email } = req.body;
+    const adminId = req.params.id;
+    
+    if (!name || !email) {
+      return res.status(400).json({ success: false, error: 'Name and email are required' });
+    }
+    
+    // Check if email is already taken by another admin
+    const existingAdmin = await Admins.findOne({ email, _id: { $ne: adminId } });
+    if (existingAdmin) {
+      return res.status(400).json({ success: false, error: 'Email already taken by another admin' });
+    }
+    
+    const updatedAdmin = await Admins.findByIdAndUpdate(
+      adminId,
+      { name, email },
+      { new: true, select: '-password' }
+    );
+    
+    if (!updatedAdmin) {
+      return res.status(404).json({ success: false, error: 'Admin not found' });
+    }
+    
+    res.json({ success: true, admin: updatedAdmin, message: 'Admin updated successfully' });
+  } catch (error) {
+    console.error('Error updating admin:', error);
+    res.status(500).json({ success: false, error: 'Failed to update admin' });
+  }
+});
+
+// Delete admin (admin only)
+app.delete('/delete-admin/:id', fetchuser, requireAdmin, async (req, res) => {
+  try {
+    const adminId = req.params.id;
+    
+    // Prevent admin from deleting themselves
+    if (adminId === req.user.id) {
+      return res.status(400).json({ success: false, error: 'Cannot delete your own admin account' });
+    }
+    
+    const deletedAdmin = await Admins.findByIdAndDelete(adminId);
+    
+    if (!deletedAdmin) {
+      return res.status(404).json({ success: false, error: 'Admin not found' });
+    }
+    
+    res.json({ success: true, message: 'Admin deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting admin:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete admin' });
+  }
+});
+
+// Change admin password (admin only)
+app.put('/change-admin-password/:id', fetchuser, requireAdmin, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const adminId = req.params.id;
+    
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters long' });
+    }
+    
+    const updatedAdmin = await Admins.findByIdAndUpdate(
+      adminId,
+      { password: newPassword }, // In production, hash this password
+      { new: true, select: '-password' }
+    );
+    
+    if (!updatedAdmin) {
+      return res.status(404).json({ success: false, error: 'Admin not found' });
+    }
+    
+    res.json({ success: true, message: 'Admin password updated successfully' });
+  } catch (error) {
+    console.error('Error updating admin password:', error);
+    res.status(500).json({ success: false, error: 'Failed to update admin password' });
   }
 });
 

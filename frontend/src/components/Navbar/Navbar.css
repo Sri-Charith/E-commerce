@@ -35,9 +35,29 @@
 .nav-menu hr{
   border: none;
   width: 80%;
-height: 3px;
-border-radius: 10px;
-background: #FF4141;
+  height: 3px;
+  border-radius: 10px;
+  background: #FF4141;
+}
+
+/* Admin Panel Menu Item */
+.admin-menu-item {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  padding: 8px 16px;
+  margin: 0 10px;
+}
+
+.admin-menu-item a {
+  color: white !important;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.admin-menu-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
 }
 .nav-login-cart {
   display: flex;
@@ -58,6 +78,127 @@ background: #FF4141;
 }
 .nav-login-cart button:active{
   background: #f3f3f3;
+}
+
+/* User Section Styles */
+.user-section {
+  position: relative;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f8f9fa;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e1e5e9;
+}
+
+.user-info:hover {
+  background: #e9ecef;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.user-avatar {
+  font-size: 20px;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  color: #666;
+  transition: transform 0.3s ease;
+}
+
+.user-info:hover .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  min-width: 220px;
+  z-index: 1000;
+  border: 1px solid #e1e5e9;
+  animation: dropdownSlide 0.3s ease-out;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-details {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.user-details p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.user-role {
+  color: #667eea;
+  font-weight: 600;
+  font-size: 12px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.user-email {
+  color: #666;
+  font-size: 12px !important;
+}
+
+.logout-btn {
+  width: 100% !important;
+  height: 40px !important;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+}
+
+.login-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 .nav-cart-count{
   width: 22px;
