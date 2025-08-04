@@ -9,6 +9,9 @@ import women_banner from "./Components/Assets/banner_women.png";
 import men_banner from "./Components/Assets/banner_mens.png";
 import kid_banner from "./Components/Assets/banner_kids.png";
 import LoginSignup from "./Pages/LoginSignup";
+import Checkout from "./Pages/Checkout";
+import Payment from "./Pages/Payment";
+import PaymentSuccess from "./Pages/PaymentSuccess";
 
 function App() {
 
@@ -25,6 +28,9 @@ function App() {
             <Route path=':productId' element={<Product />} />
           </Route>
           <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/login" element={<LoginSignup/>} />
         </Routes>
         <Footer />

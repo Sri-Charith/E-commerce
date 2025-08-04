@@ -7,6 +7,7 @@ const multer = require("multer");
 const path = require("path");
 const cors = require("cors");
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 app.use(express.json());
 app.use(cors());
@@ -206,12 +207,13 @@ app.post('/login', async (req, res) => {
   let success = false;
   
   try {
-    // First check in Users collection
+    // Check both Users and Admins collections
     let user = await Users.findOne({ email: req.body.email });
+    let admin = await Admins.findOne({ email: req.body.email });
     
-    // If not found in Users, check in Admins collection
-    if (!user) {
-      user = await Admins.findOne({ email: req.body.email });
+    // If admin account exists, prioritize it over user account
+    if (admin) {
+      user = admin;
     }
     
     if (user) {
@@ -747,6 +749,116 @@ app.put('/change-admin-password/:id', fetchuser, requireAdmin, async (req, res) 
   } catch (error) {
     console.error('Error updating admin password:', error);
     res.status(500).json({ success: false, error: 'Failed to update admin password' });
+  }
+});
+
+// ===== STRIPE PAYMENT ENDPOINTS =====
+
+// Create payment intent
+app.post('/create-payment-intent', fetchuser, async (req, res) => {
+  try {
+    const { amount, currency = 'usd', shippingInfo, cartItems } = req.body;
+
+    // Validate required fields
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, error: 'Valid amount is required' });
+    }
+
+    if (!shippingInfo) {
+      return res.status(400).json({ success: false, error: 'Shipping information is required' });
+    }
+
+    if (!cartItems || cartItems.length === 0) {
+      return res.status(400).json({ success: false, error: 'Cart items are required' });
+    }
+
+    // Create payment intent with Stripe
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100), // Convert to cents
+      currency: currency,
+      metadata: {
+        userId: req.user.id,
+        customerName: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
+        phone: shippingInfo.phone,
+        address: `${shippingInfo.address}, ${shippingInfo.district}, ${shippingInfo.state} - ${shippingInfo.pincode}`,
+        itemCount: cartItems.length.toString()
+      }
+    });
+
+    res.json({
+      success: true,
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id
+    });
+
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    res.status(500).json({ success: false, error: 'Failed to create payment intent' });
+  }
+});
+
+// Confirm payment and create order
+app.post('/confirm-payment', fetchuser, async (req, res) => {
+  try {
+    const { paymentIntentId, shippingInfo, cartItems, totalAmount } = req.body;
+
+    // Retrieve payment intent from Stripe
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.status !== 'succeeded') {
+      return res.status(400).json({ success: false, error: 'Payment not completed' });
+    }
+
+    // Create order in database (you can create an Order schema)
+    const orderData = {
+      userId: req.user.id,
+      paymentIntentId: paymentIntentId,
+      items: cartItems,
+      shippingInfo: shippingInfo,
+      totalAmount: totalAmount,
+      status: 'confirmed',
+      createdAt: new Date(),
+      paymentStatus: 'paid'
+    };
+
+    // For now, we'll just log the order (you can save to database)
+    console.log('Order created:', orderData);
+
+    // Clear user's cart after successful payment
+    await Users.findOneAndUpdate(
+      { _id: req.user.id },
+      { cartItems: [] }
+    );
+
+    res.json({
+      success: true,
+      message: 'Payment confirmed and order created',
+      orderId: paymentIntentId // Using payment intent ID as order ID for now
+    });
+
+  } catch (error) {
+    console.error('Error confirming payment:', error);
+    res.status(500).json({ success: false, error: 'Failed to confirm payment' });
+  }
+});
+
+// Get payment status
+app.get('/payment-status/:paymentIntentId', fetchuser, async (req, res) => {
+  try {
+    const { paymentIntentId } = req.params;
+    
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    
+    res.json({
+      success: true,
+      status: paymentIntent.status,
+      amount: paymentIntent.amount / 100, // Convert back from cents
+      currency: paymentIntent.currency
+    });
+    
+  } catch (error) {
+    console.error('Error getting payment status:', error);
+    res.status(500).json({ success: false, error: 'Failed to get payment status' });
   }
 });
 

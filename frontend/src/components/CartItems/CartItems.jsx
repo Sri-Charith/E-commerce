@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import "./CartItems.css";
 import cross_icon from "../Assets/cart_cross_icon.png";
 import { ShopContext } from "../../Context/ShopContext";
@@ -6,6 +7,26 @@ import { ShopContext } from "../../Context/ShopContext";
 const CartItems = () => {
   const {products} = useContext(ShopContext);
   const {cartItems,removeFromCart,getTotalCartAmount} = useContext(ShopContext);
+  const navigate = useNavigate();
+
+  const handleProceedToCheckout = () => {
+    // Check if user is logged in
+    const authToken = localStorage.getItem('auth-token');
+    if (!authToken) {
+      alert('Please login to proceed with checkout');
+      navigate('/login');
+      return;
+    }
+
+    // Check if cart is not empty
+    if (cartItems.length === 0) {
+      alert('Your cart is empty!');
+      return;
+    }
+
+    // Navigate to checkout
+    navigate('/checkout');
+  };
 
   return (
     <div className="cartitems">
@@ -63,7 +84,7 @@ const CartItems = () => {
               <h3>${getTotalCartAmount()}</h3>
             </div>
           </div>
-          <button>PROCEED TO CHECKOUT</button>
+          <button onClick={handleProceedToCheckout}>PROCEED TO CHECKOUT</button>
         </div>
         <div className="cartitems-promocode">
           <p>If you have a promo code, Enter it here</p>

@@ -1,0 +1,188 @@
+.payment-form {
+  max-width: 500px;
+  margin: 0 auto;
+  font-family: 'Poppins', sans-serif;
+}
+
+.payment-section {
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.payment-section h3 {
+  color: #333;
+  margin-bottom: 25px;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.card-element-container {
+  margin-bottom: 25px;
+}
+
+.card-element-container label {
+  display: block;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.card-element {
+  padding: 16px;
+  border: 2px solid #e1e1e1;
+  border-radius: 8px;
+  background: #fff;
+  transition: border-color 0.3s ease;
+}
+
+.card-element:focus {
+  border-color: #ff4141;
+  outline: none;
+}
+
+.card-element.StripeElement--invalid {
+  border-color: #e74c3c;
+}
+
+.payment-error {
+  background: #fee;
+  color: #e74c3c;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  border: 1px solid #fcc;
+}
+
+.payment-summary {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.amount {
+  color: #ff4141;
+  font-size: 18px;
+}
+
+.pay-button {
+  width: 100%;
+  background: linear-gradient(135deg, #ff4141, #ff6b6b);
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+}
+
+.pay-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e63939, #ff5252);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 65, 65, 0.3);
+}
+
+.pay-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.pay-button.processing {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.pay-button.processing::after {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-left: 10px;
+  border: 2px solid #fff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.payment-security {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.payment-security p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .payment-section {
+    padding: 20px;
+  }
+  
+  .payment-section h3 {
+    font-size: 18px;
+  }
+  
+  .card-element {
+    padding: 12px;
+  }
+  
+  .pay-button {
+    padding: 14px;
+    font-size: 15px;
+  }
+}
+
+/* Stripe Element Styling */
+.StripeElement {
+  box-sizing: border-box;
+  height: 50px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background-color: white;
+  box-shadow: 0 1px 3px 0 #e6ebf1;
+  -webkit-transition: box-shadow 150ms ease;
+  transition: box-shadow 150ms ease;
+}
+
+.StripeElement--focus {
+  box-shadow: 0 1px 3px 0 #cfd7df;
+}
+
+.StripeElement--invalid {
+  border-color: #fa755a;
+}
+
+.StripeElement--webkit-autofill {
+  background-color: #fefde5 !important;
+}
