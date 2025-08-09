@@ -54,8 +54,9 @@ const Checkout = () => {
 
   const handleProceedToPayment = () => {
     if (validateForm()) {
-      // Store shipping info in localStorage for payment processing
+      // Store shipping info in localStorage
       localStorage.setItem('shippingInfo', JSON.stringify(shippingInfo));
+      
       // Navigate to payment page
       navigate('/payment');
     }
